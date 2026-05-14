@@ -56,7 +56,7 @@ export function CreateColumnForm({ boardId }: CreateColumnFormProps) {
         ) : null}
 
         {createColumn.isError ? (
-          <p className={styles.error}>{createColumn.error.message}</p>
+          <p className={styles.error}>{createColumn.error?.message}</p>
         ) : null}
 
         <button

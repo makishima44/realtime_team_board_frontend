@@ -53,7 +53,7 @@ export function CreateBoardForm() {
         ) : null}
 
         {createBoard.isError ? (
-          <p className={styles.error}>{createBoard.error.message}</p>
+          <p className={styles.error}>{createBoard.error?.message}</p>
         ) : null}
 
         <button

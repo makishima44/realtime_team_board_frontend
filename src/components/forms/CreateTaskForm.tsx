@@ -92,7 +92,7 @@ export function CreateTaskForm({ columnId, boardId }: CreateTaskFormProps) {
           <p className={styles.error}>{errors.priority.message}</p>
         ) : null}
         {createTask.isError ? (
-          <p className={styles.error}>{createTask.error.message}</p>
+          <p className={styles.error}>{createTask.error?.message}</p>
         ) : null}
 
         <button

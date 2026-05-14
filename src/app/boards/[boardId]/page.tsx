@@ -22,7 +22,7 @@ export default function BoardPage() {
       {isLoading ? <p className={styles.state}>Loading board...</p> : null}
 
       {isError ? (
-        <p className={styles.error}>Failed to load board: {error.message}</p>
+        <p className={styles.error}>Failed to load board: {error?.message}</p>
       ) : null}
 
       {board ? <BoardView board={board} /> : null}

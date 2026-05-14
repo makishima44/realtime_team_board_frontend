@@ -1,8 +1,11 @@
-type RequestOptions = Omit<RequestInit, "body"> & {
-  body?: unknown;
-};
+import {
+  BaseQueryFn,
+  FetchArgs,
+  fetchBaseQuery,
+  FetchBaseQueryError,
+} from "@reduxjs/toolkit/query/react";
 
-function getBaseUrl() {
+export function getBaseUrl() {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (!baseUrl) {
@@ -12,31 +15,46 @@ function getBaseUrl() {
   return baseUrl;
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const response = await fetch(`${getBaseUrl()}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
-    },
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+export const baseQuery: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  try {
+    const rawBaseQuery = fetchBaseQuery({
+      baseUrl: getBaseUrl(),
+      prepareHeaders: (headers) => {
+        headers.set("Content-Type", "application/json");
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || `Request failed with status ${response.status}`);
+        return headers;
+      },
+      responseHandler: async (response) => {
+        if (response.status === 204) {
+          return null;
+        }
+
+        const text = await response.text();
+
+        if (!text) {
+          return null;
+        }
+
+        try {
+          return JSON.parse(text);
+        } catch {
+          return text;
+        }
+      },
+    });
+
+    return await rawBaseQuery(args, api, extraOptions);
+  } catch (error) {
+    return {
+      error: {
+        status: "CUSTOM_ERROR",
+        error:
+          error instanceof Error ? error.message : "Unexpected request error",
+      },
+    };
   }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return (await response.json()) as T;
-}
-
-export const apiClient = {
-  get: <T>(path: string) => request<T>(path, { method: "GET" }),
-  post: <TResponse, TPayload>(path: string, body: TPayload) =>
-    request<TResponse>(path, { method: "POST", body }),
-  delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
 };

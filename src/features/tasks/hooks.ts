@@ -1,28 +1,40 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { boardKeys } from "@/features/boards/hooks";
-import { CreateTaskInput } from "./types";
-import { tasksApi } from "./api";
+import { teamBoardApi } from "@/lib/api-slice";
+import { MutationResult, useWrappedMutation } from "@/lib/rtk-query-helpers";
+import { CreateTaskInput, Task } from "./types";
 
-export function useCreateTask(boardId: string) {
-  const queryClient = useQueryClient();
+type DeleteTaskInput = {
+  boardId: string;
+  taskId: string;
+};
 
-  return useMutation({
-    mutationFn: (payload: CreateTaskInput) => tasksApi.createTask(payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
-    },
-  });
+type CreateTaskMutationInput = CreateTaskInput & {
+  boardId: string;
+};
+
+export function useCreateTask(
+  boardId: string,
+): MutationResult<CreateTaskInput, Task> {
+  const mutation = useWrappedMutation<CreateTaskMutationInput, Task>(
+    teamBoardApi.useCreateTaskMutation(),
+  );
+
+  return {
+    ...mutation,
+    mutate: (payload) => mutation.mutate({ boardId, ...payload }),
+    mutateAsync: (payload) => mutation.mutateAsync({ boardId, ...payload }),
+  };
 }
 
-export function useDeleteTask(boardId: string) {
-  const queryClient = useQueryClient();
+export function useDeleteTask(boardId: string): MutationResult<string, void> {
+  const mutation = useWrappedMutation<DeleteTaskInput, void>(
+    teamBoardApi.useDeleteTaskMutation(),
+  );
 
-  return useMutation({
-    mutationFn: (taskId: string) => tasksApi.deleteTask(taskId),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
-    },
-  });
+  return {
+    ...mutation,
+    mutate: (taskId) => mutation.mutate({ boardId, taskId }),
+    mutateAsync: (taskId) => mutation.mutateAsync({ boardId, taskId }),
+  };
 }

@@ -1,36 +1,36 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { boardsApi } from "./api";
-import { CreateBoardInput } from "./types";
-
-export const boardKeys = {
-  all: ["boards"] as const,
-  detail: (boardId: string) => ["boards", boardId] as const,
-};
+import { skipToken } from "@reduxjs/toolkit/query";
+import { teamBoardApi } from "@/lib/api-slice";
+import {
+  MutationResult,
+  toError,
+  useWrappedMutation,
+} from "@/lib/rtk-query-helpers";
+import { Board, CreateBoardInput } from "./types";
 
 export function useBoards() {
-  return useQuery({
-    queryKey: boardKeys.all,
-    queryFn: boardsApi.getBoards,
-  });
+  const result = teamBoardApi.useGetBoardsQuery();
+
+  return {
+    ...result,
+    error: toError(result.error),
+    isError: result.isError,
+    isLoading: result.isLoading,
+  };
 }
 
 export function useBoard(boardId: string) {
-  return useQuery({
-    queryKey: boardKeys.detail(boardId),
-    queryFn: () => boardsApi.getBoard(boardId),
-    enabled: Boolean(boardId),
-  });
+  const result = teamBoardApi.useGetBoardQuery(boardId || skipToken);
+
+  return {
+    ...result,
+    error: toError(result.error),
+    isError: result.isError,
+    isLoading: result.isLoading,
+  };
 }
 
-export function useCreateBoard() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (payload: CreateBoardInput) => boardsApi.createBoard(payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: boardKeys.all });
-    },
-  });
+export function useCreateBoard(): MutationResult<CreateBoardInput, Board> {
+  return useWrappedMutation(teamBoardApi.useCreateBoardMutation());
 }

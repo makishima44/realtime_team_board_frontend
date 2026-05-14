@@ -1,28 +1,30 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { boardKeys } from "@/features/boards/hooks";
-import { columnsApi } from "./api";
-import { CreateColumnInput } from "./types";
+import { teamBoardApi } from "@/lib/api-slice";
+import { MutationResult, useWrappedMutation } from "@/lib/rtk-query-helpers";
+import { Column, CreateColumnInput } from "./types";
 
-export function useCreateColumn(boardId: string) {
-  const queryClient = useQueryClient();
+type DeleteColumnInput = {
+  boardId: string;
+  columnId: string;
+};
 
-  return useMutation({
-    mutationFn: (payload: CreateColumnInput) => columnsApi.createColumn(payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
-    },
-  });
+export function useCreateColumn(
+  boardId?: string,
+): MutationResult<CreateColumnInput, Column> {
+  void boardId;
+
+  return useWrappedMutation(teamBoardApi.useCreateColumnMutation());
 }
 
-export function useDeleteColumn(boardId: string) {
-  const queryClient = useQueryClient();
+export function useDeleteColumn(boardId: string): MutationResult<string, void> {
+  const mutation = useWrappedMutation<DeleteColumnInput, void>(
+    teamBoardApi.useDeleteColumnMutation(),
+  );
 
-  return useMutation({
-    mutationFn: (columnId: string) => columnsApi.deleteColumn(columnId),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: boardKeys.detail(boardId) });
-    },
-  });
+  return {
+    ...mutation,
+    mutate: (columnId) => mutation.mutate({ boardId, columnId }),
+    mutateAsync: (columnId) => mutation.mutateAsync({ boardId, columnId }),
+  };
 }

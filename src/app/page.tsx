@@ -43,7 +43,7 @@ export default function HomePage() {
 
           {isError ? (
             <p className={styles.error}>
-              Failed to load boards: {error.message}
+              Failed to load boards: {error?.message}
             </p>
           ) : null}
 
