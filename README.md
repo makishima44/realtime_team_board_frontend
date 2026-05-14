@@ -7,7 +7,7 @@ Simple Next.js frontend for manually testing the existing Realtime Team Board ba
 - Next.js with App Router
 - React + TypeScript
 - CSS Modules
-- TanStack Query
+- Redux Toolkit + RTK Query
 - React Hook Form
 - Zod
 
